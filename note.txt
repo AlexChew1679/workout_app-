@@ -1,0 +1,83 @@
+1. Install rspec and capybara
+
+                            group :development, :test do
+                              # Call 'byebug' anywhere in the code to stop execution and get a debugger console
+                              gem 'byebug', platform: :mri
+                              # rspec
+                              gem 'rspec-rails'  <= change here
+                            end
+
+                            group :test do
+                              gem 'capybara'   <=  change here
+                            end
+
+        rails g rspec:install
+        bundle binstubs rspec-core
+
+
+        mkdir spec/features
+        touch spec/features/creating_homepage_spec.rb
+
+
+        paste below at rails_helper.rb
+
+        config.backtrace_exclusion_patterns = [
+          /\/lib\d*\/ruby\//,
+          /bin\//,
+          /gems/,
+          /spec\/spec_helper\.rb/,
+          /lib\/rspec\/(core|expectations|matchers|mocks)/
+        ]
+
+2. Setting up Guard
+==============
+
+                        Add the following to the development group of the Gemfile:
+
+                        gem 'guard', '~>2.14.0'
+                        gem 'guard-rspec', '~> 4.7.2'
+                        Run the following commands on the command line:
+
+                        bundle install
+                        bundle exec guard init rspec
+                        Open the Guardfile and change the following:
+
+                        guard :rspec, cmd: "bundle exec rspec" do
+                        to
+                        guard :rspec, cmd: "bin/rspec" do
+                        Add the following to the rspec block:
+
+                        watch(%r{^app/models/(.+)\.rb$}) { |m| "spec/features/#{m[1]}s" }
+                        watch(%r{^app/controllers/(.+)_(controller)\.rb$}) { |m| "spec/features/#{m[1]}" }
+                        watch(rails.routes)          { "#{rspec.spec_dir}" }
+                        # Put the above code above this line in the Guardfile
+                        # Rails config changes
+
+                        Save the file.
+    CHECK RSPEC
+
+      $  rspec spec/features/creating_homepage_spec.rb
+      Failures:
+
+                1) Creating Home Page
+                   Failure/Error: visit '/'
+
+                   ActionController::RoutingError:
+                     No route matches [GET] "/"
+                   # ./spec/features/creating_homepage_spec.rb:5:in `block (2 levels) in <top (required)>'
+
+                   FIX : root to: "dashboards#index"  => at routes.rb
+    one more time
+                    1) Creating Home Page
+                    Failure/Error: visit '/'
+
+                    ActionController::RoutingError:
+                      uninitialized constant DashboardsController   <=dashboards controller does not exist
+                    # ./spec/features/creating_homepage_spec.rb:5:in `block (2 levels) in <top (required)>'
+                    # ------------------
+                    # --- Caused by: ---
+                    # NameError:
+                    #   uninitialized constant DashboardsController
+                    #   ./spec/features/creating_homepage_spec.rb:5:in `block (2 levels) in <top (required)>'
+
+                    FIX: rails g controller dashboards index
